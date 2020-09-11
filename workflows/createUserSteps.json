@@ -1,0 +1,46 @@
+{
+  "Comment": "A State Machine to run the flow of creating a new user and authenticating via e-mail token.",
+  "StartAt": "CreateUser",
+  "States": {
+    "CreateUser": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-2:691442066446:function:createUser",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "CreateUserFailure"
+        }
+      ],
+      "Next": "CreateUserSuccess"
+    },
+    "CreateUserSuccess": {
+      "Type": "Pass",
+      "Next": "SendUserVerificationEmail"
+    },
+    "CreateUserFailure": {
+      "Type": "Pass",
+      "Result": "Failure",
+      "End": true
+    },
+    "SendUserVerificationEmail": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-2:691442066446:function:sendRegistrationVerification",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "SendEmailFailure"
+        }
+      ],
+      "Next": "SendEmailSuccess"
+    },
+    "SendEmailSuccess": {
+      "Type": "Pass",
+      "End": true
+    },
+    "SendEmailFailure": {
+      "Type": "Pass",
+      "Result": "Failure",
+      "End": true
+    }
+  }
+}
