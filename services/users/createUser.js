@@ -10,6 +10,7 @@ exports.handler = async (event, context) => {
 
   // TODO: Salt and hash the password instead of storing in plain text
   // TODO: Generate the confirmation code
+  // TODO: validate format of the email to ensure it is proper
   // 1. This function will store username, hashed password and activation code in Users table
   // 2. Pass the username (email) and confirmation to the next step - this will send an SES email to the user with a verification code
   // 3. Pause until the verification code is entered, after 8 hours remove from pending users

@@ -1,5 +1,43 @@
-var AWS = require("aws-sdk");
+var AWS = require('aws-sdk');
+AWS.config.update({ region: 'us-east-2' });
+const ses = new AWS.SES();
+
+const params = {
+  Destination: {
+    /* User e-mail address to be appended here */
+    ToAddresses: []
+  },
+  Message: {
+    Body: {
+      Text: {
+        Charset: "UTF-8",
+        Data: ""
+      }
+    },
+    Subject: {
+      Charset: "UTF-8",
+      Data: "Thank you for registering with Maintenanceless!"
+    }
+  },
+  Source: "maintenanceless@gmail.com"
+};
 
 exports.handler = async (event, context) => {
-  console.info(event);
+  const { email, confirmationCode } = event;
+  // Set message body to include the confirmation code
+  params.Message.Body.Text.Data = getEmailMessage(confirmationCode);
+  params.Destination.ToAddresses.push(email);
+
+  try {
+    const result = await ses.sendEmail(params).promise();
+    console.info(result);
+  } catch(err) {
+    console.error(err);
+  }
+};
+
+function getEmailMessage(confirmationCode) {
+  return `Thank you for registering with Maintenanceless!\n\nYour confirmation code is: ${confirmationCode}.\n\n` +
+          'Please enter this code into the application to confirm your registration. ' + 
+          'If an account is not confirmed within 24 hours, you will have to re-register for the service.';
 };
