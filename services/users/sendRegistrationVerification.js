@@ -1,6 +1,7 @@
 var AWS = require('aws-sdk');
 AWS.config.update({ region: 'us-east-2' });
 const ses = new AWS.SES();
+var db = new AWS.DynamoDB.DocumentClient();
 
 const params = {
   Destination: {
@@ -23,16 +24,44 @@ const params = {
 };
 
 exports.handler = async (event, context) => {
-  const { email, confirmationCode } = event;
+  const { email, confirmationCode, token } = event;
   // Set message body to include the confirmation code
   params.Message.Body.Text.Data = getEmailMessage(confirmationCode);
   params.Destination.ToAddresses.push(email);
 
   try {
+    addTokenToDB(email, token);
     const result = await ses.sendEmail(params).promise();
     console.info(result);
   } catch(err) {
     console.error(err);
+  }
+};
+
+/* Helper function to add the task token to the Users table.
+ * This is required so that once the confirmation code is entered by the user,
+ * we can then continue the step function workflow.
+ */
+async function addTokenToDB(email, token) {
+  const params = {
+    TableName: 'Users',
+    Key: {
+      email
+    },
+    UpdateExpression: "set verificationToken = :token",
+    ExpressionAttributeValues: {
+      ":token": token
+    },
+    ReturnValues: "UPDATED_NEW"
+  };
+
+  console.info(`Adding token ${token} to ${email}.`);
+  try {
+    const result = await db.update(params).promise();
+    console.log('Token added to user:', token);
+  } catch (err) {
+    console.error(err);
+    throw new Error(`Unable to update the token for ${email}.`);
   }
 };
 

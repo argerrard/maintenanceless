@@ -15,12 +15,13 @@ exports.handler = async (event, context) => {
   // 2. Pass the username (email) and confirmation to the next step - this will send an SES email to the user with a verification code
   // 3. Pause until the verification code is entered, after 8 hours remove from pending users
   // 4. If code is entered, move the user to actual users
+  const confirmationCode = 12345;
   const params = {
     TableName: "Users",
     Item: {
       email,
       isActive: false,
-      confirmationCode: 1234,
+      confirmationCode,
       password
     },
     ConditionExpression: "attribute_not_exists(email)"
@@ -39,6 +40,7 @@ exports.handler = async (event, context) => {
       const errorMessage = `Could not create user: ${email}. Email already exists.`;
       throw new Error(errorMessage);
     }
+    console.error(err);
     throw new Error("Could not create the user.");
   }
 };

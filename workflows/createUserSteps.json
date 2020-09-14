@@ -3,6 +3,7 @@
   "StartAt": "CreateUser",
   "States": {
     "CreateUser": {
+      "Comment": "This stage is responsible for creating an unverified user in the database and forwarding the username and confirmation to the next step.",
       "Type": "Task",
       "Resource": "arn:aws:lambda:us-east-2:691442066446:function:createUser",
       "Catch": [
@@ -23,14 +24,24 @@
       "End": true
     },
     "SendUserVerificationEmail": {
+      "Comment": "This stage is responsible for sending the e-mail to the newly registered user containing the code.",
       "Type": "Task",
-      "Resource": "arn:aws:lambda:us-east-2:691442066446:function:sendRegistrationVerification",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {
+        "FunctionName": "sendRegistrationVerification",
+        "Payload": {
+          "token.$": "$$.Task.Token",
+          "email.$": "$.email",
+          "confirmationCode.$": "$.confirmationCode"
+        }
+      },
       "Catch": [
         {
           "ErrorEquals": ["States.ALL"],
           "Next": "SendEmailFailure"
         }
       ],
+      "TimeoutSeconds": 15,
       "Next": "SendEmailSuccess"
     },
     "SendEmailSuccess": {
