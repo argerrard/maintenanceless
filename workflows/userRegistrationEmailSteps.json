@@ -1,0 +1,36 @@
+{
+  "Comment": "A State Machine to run the flow of sending newly registered users their verification and confirmation e-mails.",
+  "StartAt": "SendUserVerificationEmail",
+  "States": {
+    "SendUserVerificationEmail": {
+      "Comment": "This stage is responsible for sending the e-mail to the newly registered user containing the confirmation code.",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {
+        "FunctionName": "sendRegistrationVerification",
+        "Payload": {
+          "token.$": "$$.Task.Token",
+          "email.$": "$.email",
+          "confirmationCode.$": "$.confirmationCode"
+        }
+      },
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "EmailVerificationFailure"
+        }
+      ],
+      "TimeoutSeconds": 60,
+      "Next": "EmailVerificationSuccess"
+    },
+    "EmailVerificationSuccess": {
+      "Type": "Pass",
+      "End": true
+    },
+    "EmailVerificationFailure": {
+      "Type": "Pass",
+      "Result": "Failure",
+      "End": true
+    }
+  }
+}
