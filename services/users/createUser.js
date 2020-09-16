@@ -1,13 +1,24 @@
 var AWS = require("aws-sdk");
 var db = new AWS.DynamoDB.DocumentClient();
 
-exports.handler = async (event, context) => {
-  const { email, password } = event;
+const invalidRequestResponse = {
+  statusCode: 400,
+  body: JSON.stringify({
+    error: "E-mail and password are required to create a new user."
+  })
+};
 
-  if (!email || !password) {
-    throw new Error("E-mail and password are required to create a new user.");
+exports.handler = async (event, context) => {
+  if (!event.body) {
+    return invalidRequestResponse;
   }
 
+  const { email, password } = JSON.parse(event.body);
+
+  if (!email || !password) {
+    return invalidRequestResponse;
+  }
+  
   // TODO: Salt and hash the password instead of storing in plain text
   // TODO: Generate the confirmation code
   // TODO: validate format of the email to ensure it is proper
@@ -20,7 +31,7 @@ exports.handler = async (event, context) => {
     TableName: "Users",
     Item: {
       email,
-      isActive: false,
+      isVerified: false,
       confirmationCode,
       password
     },
@@ -30,17 +41,32 @@ exports.handler = async (event, context) => {
   try {
     await db.put(params).promise();
     console.info(`User: ${email} successfully created.`);
+    // TODO: send a message to SQS queue to start up the e-mail send
     return {
-      email,
-      confirmationCode
+      statusCode: 201,
+      body: JSON.stringify({
+        message: `A verification code has been sent to ${email}.`
+      })
     };
   } catch (err) {
     // Username already exists
     if (err.code === "ConditionalCheckFailedException") {
       const errorMessage = `Could not create user: ${email}. Email already exists.`;
-      throw new Error(errorMessage);
+      console.error(errorMessage);
+      return {
+        statusCode: 409,
+        body: JSON.stringify({
+          error: "There was a problem registering the account - the e-mail may already be in use."
+        })
+      };
     }
     console.error(err);
-    throw new Error("Could not create the user.");
+    return {
+      statusCode: 409,
+      body: JSON.stringify({
+        error:
+          "There was a problem registering the account - the e-mail may already be in use."
+      })
+    };
   }
 };
