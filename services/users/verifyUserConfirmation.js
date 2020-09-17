@@ -41,9 +41,26 @@ exports.handler = async (event, context) => {
   console.info(`Verification successful for user ${email} - activating user.`);
 
   // Activate the user
-  activateUser(email);
+  const result = await activateUser(email);
 
-  // Trigger step function to send confirmation e-mail and close off the workflow
+  if (result.error) {
+    let error = result.error;
+    return {
+      statusCode: 500,
+      body: {
+        error
+      }
+    };
+  }
+
+  // TODO: Trigger step function to send confirmation e-mail and close off the workflow
+
+  return {
+    statusCode: 200,
+    body: {
+      message: result.message
+    }
+  };
 };
 
 
@@ -56,9 +73,9 @@ exports.handler = async (event, context) => {
 async function getUserConfirmationCode(email) {
   const error = 'There was a problem validating your confirmation code.';
   const params = {
-    "Key": { email },
-    "ProjectionExpression": "confirmationCode, isVerified, verificationToken",
-    "TableName": "Users"
+    'Key': { email },
+    'ProjectionExpression': 'confirmationCode, isVerified, verificationToken',
+    'TableName': 'Users'
   };
 
   try {
@@ -116,8 +133,29 @@ function isEnteredCodeValid(enteredCode, correctCode) {
  * 
  * @param {String} email - the email of the user to activate
  */
-function activateUser(email) {
-  return null;
+async function activateUser(email) {
+  const params = {
+    TableName: 'Users',
+    Key: { email },
+    UpdateExpression: 'SET isVerified = :isVerifiedValue',
+    ConditionExpression: 'attribute_exists(email)',
+    ExpressionAttributeValues: {
+      ':isVerifiedValue': true
+    }
+  };
+
+  console.info(`Updating ${email} to be marked as active.`);
+  try {
+    await db.update(params).promise();
+    return {
+      message: 'Account confirmation complete!'
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      error: 'There was a problem activating your account'
+    };
+  }
 }
 
 
