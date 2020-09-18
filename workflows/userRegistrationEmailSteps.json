@@ -20,7 +20,7 @@
           "Next": "EmailVerificationFailure"
         }
       ],
-      "TimeoutSeconds": 60,
+      "TimeoutSeconds": 600,
       "Next": "EmailVerificationSuccess"
     },
     "EmailVerificationSuccess": {

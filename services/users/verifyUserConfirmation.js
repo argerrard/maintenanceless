@@ -2,16 +2,21 @@ var AWS = require("aws-sdk");
 var db = new AWS.DynamoDB.DocumentClient();
 var stepfunctions = new AWS.StepFunctions();
 
+const invalidRequestResponse = {
+  statusCode: 400,
+  body: JSON.stringify({
+    error: "Bad request - an email and confirmation code are required."
+  })
+};
+
 exports.handler = async (event, context) => {
-  const { email, confirmationCode } = event;
+  if (!event.body) {
+    return invalidRequestResponse;
+  }
+  const { email, confirmationCode } = JSON.parse(event.body);
 
   if (!email || !confirmationCode) {
-    return {
-      statusCode: 400,
-      body: {
-        error: 'Bad request - an email and confirmation code are required.'
-      }
-    };
+    return invalidRequestResponse;
   }
 
   // Get the confirmationCode stored in the database for the user
@@ -21,9 +26,9 @@ exports.handler = async (event, context) => {
   if (error) {
     return {
       statusCode,
-      body: {
+      body: JSON.stringify({
         error
-      }
+      })
     };
   }
 
@@ -32,9 +37,9 @@ exports.handler = async (event, context) => {
   if (!isEnteredCodeValid(confirmationCode, code)) {
     return {
       statusCode: 400,
-      body: {
+      body: JSON.stringify({
         error: "Sorry - that doesn't seem to be the right verification code."
-      }
+      })
     };
   }
 
@@ -47,19 +52,28 @@ exports.handler = async (event, context) => {
     let error = result.error;
     return {
       statusCode: 500,
-      body: {
+      body: JSON.stringify({
         error
-      }
+      })
     };
   }
 
-  // TODO: Trigger step function to send confirmation e-mail and close off the workflow
+  // Trigger step function to send confirmation e-mail and close off the workflow
+  try {
+    await stepfunctions.sendTaskSuccess({
+      output: "\"Callback task completed successfully.\"",
+      taskToken: emailTaskToken
+    }).promise();
+  } catch(err) {
+    console.error(`Failed to trigger step function for ${email}.`);
+    console.error(err);
+  }
 
   return {
     statusCode: 200,
-    body: {
+    body: JSON.stringify({
       message: result.message
-    }
+    })
   };
 };
 
