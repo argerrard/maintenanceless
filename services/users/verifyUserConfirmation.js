@@ -58,10 +58,14 @@ exports.handler = async (event, context) => {
     };
   }
 
+  const taskParams = {
+    email
+  };
+
   // Trigger step function to send confirmation e-mail and close off the workflow
   try {
     await stepfunctions.sendTaskSuccess({
-      output: "\"Callback task completed successfully.\"",
+      output: JSON.stringify(taskParams),
       taskToken: emailTaskToken
     }).promise();
   } catch(err) {
