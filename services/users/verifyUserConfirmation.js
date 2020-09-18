@@ -175,14 +175,3 @@ async function activateUser(email) {
     };
   }
 }
-
-
-/**
- * Function to continue the registration workflow by sending a confirmation to the user 
- * that their account is successfully registered.
- * 
- * @param {String} emailTaskToken - the task token required to continue the registration workflow
- */
-function sendConfirmationEmail(emailTaskToken) {
-  stepfunctions.sendTaskSuccess({ verificationToken: emailTaskToken }).promise();
-}
