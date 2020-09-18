@@ -36,11 +36,6 @@
       "Comment": "This stage is responsible for sending the e-mail to the newly confirmed user letting them know they are registered.",
       "Type": "Task",
       "Resource": "arn:aws:lambda:us-east-2:691442066446:function:sendConfirmationEmail",
-      "Next": "UserIsRegistered"
-    },
-    "UserIsRegistered": {
-      "Type": "Pass",
-      "Result": "Success",
       "End": true
     }
   }
