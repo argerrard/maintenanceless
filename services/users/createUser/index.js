@@ -1,6 +1,7 @@
 var AWS = require("aws-sdk");
 var db = new AWS.DynamoDB.DocumentClient();
 var stepfunctions = new AWS.StepFunctions();
+const bcrypt = require('bcrypt');
 
 const invalidRequestResponse = {
   statusCode: 400,
@@ -27,26 +28,29 @@ exports.handler = async (event, context) => {
   // 2. Pass the username (email) and confirmation to the next step - this will send an SES email to the user with a verification code
   // 3. Pause until the verification code is entered, after 8 hours remove from pending users
   // 4. If code is entered, move the user to actual users
-  const confirmationCode = 12345;
-  const { result, error } = await createUnverifiedUser(email, password, confirmationCode);
+  bcrypt.hash(password, 10, async function(hashError, hash){
+    console.info(hash);
+    const confirmationCode = 12345;
+    const { result, error } = await createUnverifiedUser(email, password, confirmationCode);
 
-  // There was a problem adding the user to the database
-  if (error) {
+    // There was a problem adding the user to the database
+    if (error) {
+      return {
+        statusCode: 409,
+        body: JSON.stringify({
+          error
+        })
+      };
+    }
+
+    // User was added successfully and step function was triggered
     return {
-      statusCode: 409,
+      statusCode: 201,
       body: JSON.stringify({
-        error
+        message: result
       })
     };
-  }
-
-  // User was added successfully and step function was triggered
-  return {
-    statusCode: 201,
-    body: JSON.stringify({
-      message: result
-    })
-  };
+  });
 };
 
 /**
