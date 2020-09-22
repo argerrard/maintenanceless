@@ -10,18 +10,17 @@ const invalidRequestResponse = {
   })
 };
 
-exports.handler = async (event, context) => {
+exports.handler = (event, context, callback) => {
   if (!event.body) {
-    return invalidRequestResponse;
+    return callback(null, invalidRequestResponse);
   }
 
   const { email, password } = JSON.parse(event.body);
 
   if (!email || !password) {
-    return invalidRequestResponse;
+    return callback(null, invalidRequestResponse);
   }
   
-  // TODO: Salt and hash the password instead of storing in plain text
   // TODO: Generate the confirmation code
   // TODO: validate format of the email to ensure it is proper (and lowercase it)
   // 1. This function will store username, hashed password and activation code in Users table
@@ -29,27 +28,35 @@ exports.handler = async (event, context) => {
   // 3. Pause until the verification code is entered, after 8 hours remove from pending users
   // 4. If code is entered, move the user to actual users
   bcrypt.hash(password, 10, async function(hashError, hash){
-    console.info(hash);
+    if (hashError) {
+      return callback({
+        statusCode: 500,
+        body: JSON.stringify({
+          error: 'There was a problem creating the user.'
+        })
+      });
+    }
+
     const confirmationCode = 12345;
-    const { result, error } = await createUnverifiedUser(email, password, confirmationCode);
+    const { result, error } = await createUnverifiedUser(email, hash, confirmationCode);
 
     // There was a problem adding the user to the database
     if (error) {
-      return {
+      return callback(null, {
         statusCode: 409,
         body: JSON.stringify({
           error
         })
-      };
+      });
     }
-
+    console.info('Returning:', result);
     // User was added successfully and step function was triggered
-    return {
+    return callback(null, {
       statusCode: 201,
       body: JSON.stringify({
         message: result
       })
-    };
+    });
   });
 };
 
