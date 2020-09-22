@@ -3,6 +3,7 @@ var db = new AWS.DynamoDB.DocumentClient();
 var stepfunctions = new AWS.StepFunctions();
 const bcrypt = require('bcrypt');
 
+const HASH_ROUNDS = 10;
 const invalidRequestResponse = {
   statusCode: 400,
   body: JSON.stringify({
@@ -10,55 +11,77 @@ const invalidRequestResponse = {
   })
 };
 
-exports.handler = (event, context, callback) => {
+exports.handler = async (event, context) => {
   if (!event.body) {
-    return callback(null, invalidRequestResponse);
+    return invalidRequestResponse;
   }
 
   const { email, password } = JSON.parse(event.body);
 
   if (!email || !password) {
-    return callback(null, invalidRequestResponse);
+    return invalidRequestResponse;
   }
   
   // TODO: Generate the confirmation code
   // TODO: validate format of the email to ensure it is proper (and lowercase it)
-  // 1. This function will store username, hashed password and activation code in Users table
-  // 2. Pass the username (email) and confirmation to the next step - this will send an SES email to the user with a verification code
-  // 3. Pause until the verification code is entered, after 8 hours remove from pending users
-  // 4. If code is entered, move the user to actual users
-  bcrypt.hash(password, 10, async function(hashError, hash){
-    if (hashError) {
-      return callback({
-        statusCode: 500,
-        body: JSON.stringify({
-          error: 'There was a problem creating the user.'
-        })
-      });
-    }
-
-    const confirmationCode = 12345;
-    const { result, error } = await createUnverifiedUser(email, hash, confirmationCode);
-
-    // There was a problem adding the user to the database
-    if (error) {
-      return callback(null, {
-        statusCode: 409,
-        body: JSON.stringify({
-          error
-        })
-      });
-    }
-    console.info('Returning:', result);
-    // User was added successfully and step function was triggered
-    return callback(null, {
-      statusCode: 201,
+  let hashResult;
+  try {
+    hashResult = await generatePasswordHash(email, password);
+  } catch (hashError) {
+    return {
+      statusCode: 500,
       body: JSON.stringify({
-        message: result
+        error: hashError
       })
-    });
-  });
+    };
+  }
+
+  const confirmationCode = 12345;
+  const { result, error } = await createUnverifiedUser(
+    email,
+    hashResult,
+    confirmationCode
+  );
+
+  // There was a problem adding the user to the database
+  if (error) {
+    return {
+      statusCode: 409,
+      body: JSON.stringify({
+        error
+      })
+    };
+  }
+
+  // User was added successfully and step function was triggered
+  return {
+    statusCode: 201,
+    body: JSON.stringify({
+      message: result
+    })
+  };
 };
+
+
+/**
+ * Function that returns a promise containing the result of hashing the provided
+ * password. The salt is auto-generated.
+ * 
+ * @param {String} email user's e-mail for logging purposes
+ * @param {String} password the password to be hashed by bcrypt
+ */
+function generatePasswordHash(email, password) {
+  return new Promise((resolve, reject) => {
+      bcrypt.hash(password, HASH_ROUNDS, function(hashError, hashResult) {
+      if (hashError) {
+        console.error('Error creating hash for user: ', email);
+        console.error(hashError);
+        reject('There was a problem creating the user.');
+      }
+      return resolve(hashResult);
+    })
+  });
+}
 
 /**
  * Function to create an unverified user in the database. The function
