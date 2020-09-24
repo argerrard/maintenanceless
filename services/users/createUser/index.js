@@ -16,14 +16,26 @@ exports.handler = async (event, context) => {
     return invalidRequestResponse;
   }
 
-  const { email, password } = JSON.parse(event.body);
+  let { email, password } = JSON.parse(event.body);
 
   if (!email || !password) {
     return invalidRequestResponse;
   }
+
+  // Check that email is a valid format before proceeding
+  if (!isValidEmail(email)) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        error: 'The e-mail provided was an invalid format'
+      })
+    };
+  }
+
+  // Lower case e-mail so that we don't have duplicate entries in our database
+  email = email.toLowerCase();
   
-  // TODO: Generate the confirmation code
-  // TODO: validate format of the email to ensure it is proper (and lowercase it)
+  // Hash the password that was entered
   let hashResult;
   try {
     hashResult = await generatePasswordHash(email, password);
@@ -36,7 +48,8 @@ exports.handler = async (event, context) => {
     };
   }
 
-  const confirmationCode = 12345;
+  // Generate the six digit confirmation code and create the user as unverified in the DB
+  const confirmationCode = generateConfirmationCode();
   const { result, error } = await createUnverifiedUser(
     email,
     hashResult,
@@ -150,3 +163,22 @@ async function startEmailSteps(email, confirmationCode) {
     console.error(err);
   }
 };
+
+/**
+ * Returns true if the email provided is valid, false otherwise
+ * 
+ * @param {String} email 
+ */
+function isValidEmail(email) {
+  const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(String(email).toLowerCase());
+}
+
+/**
+ * Generates a confirmation code that the user is required to enter when registering.
+ * Confirmation codes are a string of digits that is always six digits long.
+ * 
+ */
+function generateConfirmationCode() {
+  return Math.random().toString().split('.')[1].substring(0,6);
+}

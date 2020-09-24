@@ -13,11 +13,13 @@ exports.handler = async (event, context) => {
   if (!event.body) {
     return invalidRequestResponse;
   }
-  const { email, confirmationCode } = JSON.parse(event.body);
+  let { email, confirmationCode } = JSON.parse(event.body);
 
   if (!email || !confirmationCode) {
     return invalidRequestResponse;
   }
+
+  let email = email.toLowerCase();
 
   // Get the confirmationCode stored in the database for the user
   // We can get the emailTaskToken at the same time to prevent unnecessary database reads
