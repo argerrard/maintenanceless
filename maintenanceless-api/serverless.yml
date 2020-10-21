@@ -24,9 +24,10 @@ provider:
   #  SAMPLE_ENV_VAR: ${env:SAMPLE_ENV_VAR}
 
 functions:
-  hello:
-    handler: handler.hello
+  createUser:
+    handler: services/users/createUser/handler.main
     events:
       - http:
-          path: hello
-          method: get
+          path: users
+          method: post
+          cors: true

@@ -165,16 +165,6 @@ async function startEmailSteps(email, confirmationCode) {
 };
 
 /**
- * Returns true if the email provided is valid, false otherwise
- * 
- * @param {String} email 
- */
-function isValidEmail(email) {
-  const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  return re.test(String(email).toLowerCase());
-}
-
-/**
  * Generates a confirmation code that the user is required to enter when registering.
  * Confirmation codes are a string of digits that is always six digits long.
  * 
