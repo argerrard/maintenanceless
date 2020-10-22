@@ -21,7 +21,7 @@ export const main = handler(async (event, context) => {
     return invalidRequestResponse;
   }
 
-  let { email, password } = event.body;
+  let { email, password } = JSON.parse(event.body);
 
   // Validate that email and password are both provided
   if (!email || !password) {
