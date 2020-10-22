@@ -31,3 +31,11 @@ functions:
           path: users
           method: post
           cors: true
+  startVerification:
+    handler: services/users/startVerification/handler.main
+    events:
+      - stream:
+          type: dynamodb
+          arn: ${env:USERS_STREAM_ARN}
+
+

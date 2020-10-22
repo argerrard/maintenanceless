@@ -1,9 +1,8 @@
-import AWS from "aws-sdk";
 import errors from "./errors";
 
 class DynamoDBRepository {
-  constructor(table) {
-    this.db = new AWS.DynamoDB.DocumentClient();
+  constructor(table, client) {
+    this.db = client;
     this.table = table;
   }
 

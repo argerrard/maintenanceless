@@ -2,10 +2,12 @@ import handler from "../../../libs/handlerLib";
 import DynamoDBRepository from "../../../libs/DynamoDBRepository";
 import { isValidEmail } from "../../../libs/stringUtilsLib";
 import errors from "../../../libs/errors";
-
 import User from "../../../models/User";
 
-const repository = new DynamoDBRepository("Users");
+import AWS from "aws-sdk";
+
+const client = new AWS.DynamoDB.DocumentClient();
+const repository = new DynamoDBRepository("Users", client);
 const invalidRequestResponse = {
   statusCode: 400,
   body: {
