@@ -27,12 +27,12 @@ class DynamoDBRepository {
 
     try {
       await this.db.put(params).promise();
-      console.info(`${primaryKeyField} successfully created in table ${this.table}.`);
+      console.info(`${item} successfully created in table ${this.table}.`);
       return item;
     } catch (err) {
       // Username already exists
       if (err.code === "ConditionalCheckFailedException") {
-        console.error(`Could not create entry for ${primaryKeyField}. Key already exists.`);
+        console.error(`Could not create entry for ${item}. Key already exists.`);
         return {
           error: errors.KEY_EXISTS_EXCEPTION
         };

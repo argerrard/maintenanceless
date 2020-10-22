@@ -34,6 +34,11 @@ provider:
         - dynamodb:DeleteItem
         - dynamodb:DescribeTable
       Resource: "arn:aws:dynamodb:us-east-2:*:*"
+    - Effect: Allow
+      Action:
+        - ses:SendEmail
+      Resource: "*"
+    
 
 functions:
   createUser:
@@ -49,5 +54,3 @@ functions:
       - stream:
           type: dynamodb
           arn: ${env:USERS_STREAM_ARN}
-
-
