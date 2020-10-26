@@ -16,7 +16,7 @@ const invalidRequestResponse = {
 
  /**
   * This handler is triggered by API Gateway when a POST request is made to
-  * /verify with body parameters including an e-mail and a verification code.
+  * /users/verify with body parameters including an e-mail and a verification code.
   *
   */
  export const main = async (event, context) => {
@@ -30,6 +30,20 @@ const invalidRequestResponse = {
   }
 
   email = email.toLowerCase();
-  const isVerified = await userModel.isUserVerified(email);
-  return isVerified;
+
+  const { error, result } = await userModel.verifyUserRegistration(email, confirmationCode);
+  if (error) {
+    return {
+      statusCode: 400,
+      body: {
+        error
+      }
+    };
+  }
+  
+  return {
+    body: {
+      result
+    }
+  };
 };
