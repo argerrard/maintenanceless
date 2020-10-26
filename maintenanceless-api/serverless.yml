@@ -54,3 +54,10 @@ functions:
       - stream:
           type: dynamodb
           arn: ${env:USERS_STREAM_ARN}
+  verifyRegistration:
+    handler: services/users/verifyRegistration/handler.main
+    events:
+      - http:
+          path: users/verify
+          method: post
+          cors: true
