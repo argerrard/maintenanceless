@@ -37,6 +37,25 @@ class User {
       result: "User created succesfully."
     };
   }
+
+  async isUserVerified(email) {
+    const options = { primaryKeyField: "email", attributesToGet: [ "isVerified" ] };
+    try {
+      const { error, result } = await this.repository.get(email, options);
+      if (error || !result.hasOwnProperty("isVerified")) {
+        console.error(error);
+        return false;
+      }
+      return result.isVerified;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  }
+
+  async getUserConfirmationCode(email) {
+    return 123456;
+  }
 }
 
 export default User;
