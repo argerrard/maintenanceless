@@ -1,3 +1,4 @@
+import handler from "../../../libs/handlerLib";
 import DynamoDBRepository from "../../../libs/DynamoDBRepository";
 import User from "../../../models/User";
 
@@ -19,7 +20,7 @@ const invalidRequestResponse = {
   * /users/verify with body parameters including an e-mail and a verification code.
   *
   */
- export const main = async (event, context) => {
+ export const main = handler(async (event, context) => {
   if (!event.body) {
     return invalidRequestResponse;
   }
@@ -46,4 +47,4 @@ const invalidRequestResponse = {
       result
     }
   };
-};
+});
