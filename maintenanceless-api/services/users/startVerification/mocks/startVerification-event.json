@@ -1,0 +1,37 @@
+{
+  "Records": [
+    {
+      "eventID": "af2f2239ac77e91c4f12311bc530261a",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "us-east-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1603369103,
+        "Keys": {
+          "email": {
+            "S": "argerrard@live.com"
+          }
+        },
+        "NewImage": {
+          "confirmationCode": {
+            "S": "864197"
+          },
+          "password": {
+            "S": "$2a$10$aoJpVq12gaZJtUsmJiGWTeOiQffLOzQvV9ZdOxgYxftCeX/mXyLGq"
+          },
+          "isVerified": {
+            "BOOL": false
+          },
+          "email": {
+            "S": "argerrard@live.com"
+          }
+        },
+        "SequenceNumber": "176451100000000004671164822",
+        "SizeBytes": 157,
+        "StreamViewType": "NEW_IMAGE"
+      },
+      "eventSourceARN": "arn:aws:dynamodb:us-east-2:691442066446:table/Users/stream/2020-10-21T20:42:45.596"
+    }
+  ]
+}

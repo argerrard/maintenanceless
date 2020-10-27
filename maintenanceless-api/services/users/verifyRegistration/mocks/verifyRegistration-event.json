@@ -1,0 +1,3 @@
+{
+  "body": "{\n    \"email\": \"testemail@testemail.com\",\n    \"confirmationCode\": \"123456\"\n  }"
+}

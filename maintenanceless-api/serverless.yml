@@ -1,0 +1,63 @@
+# NOTE: update this with your service name
+service: maintenanceless-api
+
+# Create an optimized package for our functions 
+package:
+  individually: true
+
+plugins:
+  - serverless-bundle # Package our functions with Webpack
+  - serverless-offline
+  - serverless-dotenv-plugin # Load .env as environment variables
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stage: dev
+  region: us-east-2
+  # To load environment variables externally
+  # rename env.example to .env and uncomment
+  # the following line. Also, make sure to not
+  # commit your .env.
+  #
+  #environment:
+  #  SAMPLE_ENV_VAR: ${env:SAMPLE_ENV_VAR}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+        - dynamodb:Query
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:DescribeTable
+      Resource: "arn:aws:dynamodb:us-east-2:*:*"
+    - Effect: Allow
+      Action:
+        - ses:SendEmail
+      Resource: "*"
+    
+
+functions:
+  createUser:
+    handler: services/users/createUser/handler.main
+    events:
+      - http:
+          path: users
+          method: post
+          cors: true
+  startVerification:
+    handler: services/users/startVerification/handler.main
+    events:
+      - stream:
+          type: dynamodb
+          arn: ${env:USERS_STREAM_ARN}
+  verifyRegistration:
+    handler: services/users/verifyRegistration/handler.main
+    events:
+      - http:
+          path: users/verify
+          method: post
+          cors: true
