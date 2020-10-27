@@ -1,4 +1,4 @@
-import { generateConfirmationCode, generatePasswordHash, isEnteredCodeValid } from '../libs/userAuthLib';
+import { generateConfirmationCode, generatePasswordHash, isEnteredCodeValid } from '../libs/utils/userAuthLib';
 
 class User {
   constructor(repository) {

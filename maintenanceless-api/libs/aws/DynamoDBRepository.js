@@ -1,4 +1,4 @@
-import errors from "./errors";
+import errors from "../constants/errors";
 
 class DynamoDBRepository {
   constructor(table, client) {

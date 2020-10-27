@@ -1,7 +1,7 @@
-import handler from "../../../libs/handlerLib";
-import DynamoDBRepository from "../../../libs/DynamoDBRepository";
-import { isValidEmail } from "../../../libs/stringUtilsLib";
-import errors from "../../../libs/errors";
+import handler from "../../../libs/aws/handlerLib";
+import DynamoDBRepository from "../../../libs/aws/DynamoDBRepository";
+import { isValidEmail } from "../../../libs/utils/stringUtilsLib";
+import errors from "../../../libs/constants/errors";
 import User from "../../../models/User";
 
 import AWS from "aws-sdk";
