@@ -72,6 +72,22 @@ class User {
     }
   }
 
+  async activateUser(email) {
+    const updates = { isVerified: true };
+    const options = { primaryKeyField: "email", updates };
+    const { result, error } = await this.repository.update(email, options);
+
+    if (error) {
+      console.error(`There was a problem activating user: ${email}`);
+      return {
+        error: 'There was a problem activating the user.',
+        errorKey: error
+      };
+    }
+
+    return result;
+  }
+
   async verifyUserRegistration(email, enteredConfirmationCode) {
     const ERROR_MESSAGE = 'There was a problem verifying the user with the provided confirmation code.';
     // Check to see if the user is already verified before continuing further
@@ -92,16 +108,25 @@ class User {
       };
     }
 
+    console.info(`Comparing entered code: ${enteredConfirmationCode} to actual ${confirmationCode}.`);
     // Compare the supplied confirmation code to the confirmation code in the repository
     const isCodeValid = isEnteredCodeValid(enteredConfirmationCode, confirmationCode);
+    console.info(`Is code valid: ${isCodeValid}`);
     if (!isCodeValid) {
       return {
         error: 'The supplied confirmation code did not match with the confirmation code on file.'
       };
     }
 
-    // TODO: Code entered was valid, mark the user as active in the app database
-    
+    // Mark the user as active in the repository
+    const activationResult = await this.activateUser(email);
+
+    if (activationResult.error) {
+      return {
+        error: 'There was a problem activating the user in the system.'
+      };
+    }
+
     return {
       result: `Success! ${email} is activated and ready to start maintaining.`
     };

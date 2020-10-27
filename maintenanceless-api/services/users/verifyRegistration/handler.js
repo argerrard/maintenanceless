@@ -40,7 +40,7 @@ const invalidRequestResponse = {
       }
     };
   }
-  
+
   return {
     body: {
       result

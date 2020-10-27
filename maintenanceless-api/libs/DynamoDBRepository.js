@@ -59,6 +59,67 @@ class DynamoDBRepository {
   }
 
   /**
+   * Updates an existing DynamoDB item in the specified table using the options provided.
+   *
+   * Options include:
+   *   primaryKeyField: the attribute name representing the primary key field
+   *   updates: the updates we want to make - this is a JSON object where each attribute represents
+   *            the attribute we are updating in the table, and the value is the new value we want to use
+   *
+   * @param {String} id - id of the item we want to update
+   * @param {Object} options - the options provided for the update
+   */
+  async update(id, options) {
+    const { primaryKeyField, updates } = options;
+
+    console.info(`Updating Table ${this.table} for ID ${id}`);
+
+    if (!primaryKeyField) {
+      console.error("A primary key field is required to create a new item.");
+      return { error: errors.MISSING_OPTION_EXCEPTION };
+    }
+
+    if (!updates || updates.length === 0) {
+      console.error("There must be at least one update to create a new item.");
+      return { error: errors.MISSING_OPTION_EXCEPTION };
+    }
+
+    // Build the UpdateExpression and Expression Attribute Values from the provided updates
+    let updateExpression = 'SET ';
+    let expressionAttributeValues = {};
+    let i = 0;
+    for (const key in updates) {
+      if (i > 0) {
+        updateExpression += ', ';
+      }
+      updateExpression += `${key} = :${i}`;
+      expressionAttributeValues[`:${i}`] = updates[key];
+    }
+
+    const params = {
+      TableName: this.table,
+      Key: { [primaryKeyField]: id },
+      UpdateExpression: updateExpression,
+      ConditionExpression: `attribute_exists(${primaryKeyField})`,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ReturnValues: "UPDATED_NEW"
+    };
+
+    console.info(`Updating Table: ${this.table} with params ${JSON.stringify(params)}.`);
+
+    try {
+      const result = await this.db.update(params).promise();
+      console.info(result);
+      return { result };
+    } catch (err) {
+      console.error(err);
+      return {
+        error: errors.ITEM_UPDATE_EXCEPTION
+      };
+    }
+  }
+
+  /**
    * Gets the data filtered by the attributes provided in the options for the id provided.
    *
    * Options include:
@@ -91,9 +152,14 @@ class DynamoDBRepository {
     }
     console.info("Requesting info from database with params: ", params);
 
-    const result = await this.db.get(params).promise();
-    console.info("Returning result", result.Item);
-    return { result: result.Item };
+    try {
+      const result = await this.db.get(params).promise();
+      console.info("Returning result", result.Item);
+      return { result: result.Item };
+    } catch (err) {
+      console.error(err);
+      return { error: errors.ITEM_GET_EXCEPTION };
+    }
   }
 }
 
