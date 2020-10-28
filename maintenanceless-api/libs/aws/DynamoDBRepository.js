@@ -27,6 +27,13 @@ class DynamoDBRepository {
       };
     }
 
+    if (!item) {
+      console.error("Item data is required to create a new item.");
+      return {
+        error: errors.MISSING_OPTION_EXCEPTION
+      };
+    }
+
     const params = {
       TableName: this.table,
       Item: item
