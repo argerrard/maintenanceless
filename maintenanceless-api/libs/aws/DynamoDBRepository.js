@@ -86,7 +86,7 @@ class DynamoDBRepository {
       return { error: errors.MISSING_OPTION_EXCEPTION };
     }
 
-    if (!updates || updates.length === 0) {
+    if (!updates || (Object.keys(updates).length === 0 && updates.constructor === Object)) {
       console.error("There must be at least one update to create a new item.");
       return { error: errors.MISSING_OPTION_EXCEPTION };
     }
@@ -101,6 +101,7 @@ class DynamoDBRepository {
       }
       updateExpression += `${key} = :${i}`;
       expressionAttributeValues[`:${i}`] = updates[key];
+      i++;
     }
 
     const params = {
@@ -141,8 +142,8 @@ class DynamoDBRepository {
     const { primaryKeyField, attributesToGet = [] } = options;
 
     // A primary key field is required to fetch the data
-    if (!primaryKeyField) {
-      console.error("A primary key field is required to get an item's data.");
+    if (!primaryKeyField || !id) {
+      console.error("A primary key field and id is required to get an item's data.");
       return {
         error: errors.MISSING_OPTION_EXCEPTION
       };

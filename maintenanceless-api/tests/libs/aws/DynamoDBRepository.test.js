@@ -185,6 +185,7 @@ describe("test that DynamoDB repository update function updates items and throws
 
   test("calls to update without any actual updates are rejected with a MISSING_OPTION_EXCEPTION", async () => {
     const { error } = await repository.update("fred", {
+      primaryKeyField: "name",
       updates: {}
     });
 
@@ -193,7 +194,8 @@ describe("test that DynamoDB repository update function updates items and throws
 
   test("calls to update without an item id are rejected with a MISSING_OPTION_EXCEPTION", async () => {
     const { error } = await repository.update("", {
-      updates: { age: 30 }
+      updates: { age: 30 },
+      primaryKeyField: "name"
     });
 
     expect(error).toBe(errors.MISSING_OPTION_EXCEPTION);
@@ -201,23 +203,60 @@ describe("test that DynamoDB repository update function updates items and throws
 
   test("on updates, table name and item key are being set correctly", async () => {
     await repository.update("laura", {
-      updates: { name: "susan" }
+      primaryKeyField: "name",
+      updates: { age: 25 }
     });
     const actualParams = mockDynamoUpdate.mock.calls[0][0];
     expect(actualParams.TableName).toBe("Users");
-    expect(actualParams.Key).toBe({ name: "laura" });
+    expect(actualParams.Key).toEqual({ name: "laura" });
+    expect(actualParams.ConditionExpression).toBe("attribute_exists(name)");
   });
   
   test("the update expression and expression attributes are set correctly for one item", async () => {
-
+    await repository.update("laura", {
+      primaryKeyField: "name",
+      updates: { age: 25 }
+    });
+    const actualParams = mockDynamoUpdate.mock.calls[0][0];
+    expect(actualParams.UpdateExpression).toBe("SET age = :0");
+    expect(actualParams.ExpressionAttributeValues).toEqual({ ":0": 25 });
   });
 
   test("the update expression and expression attributes are set correctly for multiple items", async () => {
-
+    await repository.update("laura", {
+      primaryKeyField: "name",
+      updates: { age: 25, activity: "baseball" }
+    });
+    const actualParams = mockDynamoUpdate.mock.calls[0][0];
+    expect(actualParams.UpdateExpression).toBe("SET age = :0, activity = :1");
+    expect(actualParams.ExpressionAttributeValues).toEqual({ ":0": 25, ":1": "baseball" });
   });
 
   test("on any errors while calling DynamoDB, an ITEM_UPDATE_EXCEPTION code is returned", async () => {
+    // Set up DynamoDB Mock that throws an unexpected error
+    const unexpectedDynamoPut = jest.fn();
+    const promiseFn = jest.fn();
+    
+    promiseFn.mockRejectedValueOnce({
+      code: "UnExpectedError"
+    });
 
+    unexpectedDynamoPut.mockReturnValue({
+      promise: promiseFn
+    });
+
+    client = {
+      update: unexpectedDynamoPut
+    };
+
+    // Initialize repository with the client that throws a conditional check failed
+    repository = new DynamoDBRepository("Users", client);
+
+    const { error } = await repository.update("fred", {
+      primaryKeyField: "name",
+      updates: { age: 30 }
+    });
+    expect(error).toBe(errors.ITEM_UPDATE_EXCEPTION);
   });
 });
 
@@ -226,7 +265,85 @@ describe("test that DynamoDB repository update function updates items and throws
  * 
  */
 describe("test that DynamoDB repository get function gets items and throws exceptions as expected", () => {
-  test("", async () => {
 
+  let mockDynamoGet;
+  let client;
+  let repository;
+
+  beforeEach(() => {
+    mockDynamoGet = jest.fn();
+    mockDynamoGet.mockReturnValue({
+      promise: jest.fn()
+    });
+
+    client = {
+      get: mockDynamoGet
+    };
+
+    // Set up the repository
+    repository = new DynamoDBRepository("Users", client);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test("getting a item without a primaryKeyField throws a missing option exception", async () => {
+    const { error } = await repository.get('jack', {});
+    expect(error).toBe(errors.MISSING_OPTION_EXCEPTION);
+  });
+
+  test("getting a item without an id throws a missing option exception", async () => {
+    const { error } = await repository.get('', { primaryKeyField: 'name' });
+    expect(error).toBe(errors.MISSING_OPTION_EXCEPTION);
+  });
+
+  test("key and table name are set correctly when getting an item", async () => {
+    await repository.get("jack", { primaryKeyField: "name" });
+    const actualParams = mockDynamoGet.mock.calls[0][0];
+    expect(actualParams.Key).toEqual({ name: 'jack' });
+    expect(actualParams.TableName).toEqual('Users');
+  });
+
+  test("getting an item without specific attributes does not include projection expression", async () => {
+    await repository.get("jack", { primaryKeyField: "name" });
+    const actualParams = mockDynamoGet.mock.calls[0][0];
+    expect(actualParams.ProjectionExpression).toBeUndefined();
+  });
+
+  test("getting an item with one attribute includes correct projection expression", async () => {
+    await repository.get("jack", { primaryKeyField: "name", attributesToGet: ["age"] });
+    const actualParams = mockDynamoGet.mock.calls[0][0];
+    expect(actualParams.ProjectionExpression).toBe('age');
+  });
+
+  test("getting an item with multiple attributes includes correct projection expression", async () => {
+    await repository.get("jack", { primaryKeyField: "name", attributesToGet: ["age", "address"] });
+    const actualParams = mockDynamoGet.mock.calls[0][0];
+    expect(actualParams.ProjectionExpression).toBe('age,address');
+  });
+
+  test("on unexpected DynamoDB errors, ITEM_GET_EXCEPTION is returned to the caller", async () => {
+    // Set up DynamoDB Mock that throws an unexpected error
+    const unexpectedDynamoGet = jest.fn();
+    const promiseFn = jest.fn();
+    
+    promiseFn.mockRejectedValueOnce({
+      code: "UnExpectedError"
+    });
+
+    unexpectedDynamoGet.mockReturnValue({
+      promise: promiseFn
+    });
+
+    client = {
+      get: unexpectedDynamoGet
+    };
+
+    // Initialize repository with the client that throws a conditional check failed
+    repository = new DynamoDBRepository("Users", client);
+
+    const { error } = await repository.get("fred", { primaryKeyField: "name"});
+    expect(error).toBe(errors.ITEM_GET_EXCEPTION);
   });
 });
