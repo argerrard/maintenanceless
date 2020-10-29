@@ -81,8 +81,8 @@ class DynamoDBRepository {
 
     console.info(`Updating Table ${this.table} for ID ${id}`);
 
-    if (!primaryKeyField) {
-      console.error("A primary key field is required to create a new item.");
+    if (!primaryKeyField || !id) {
+      console.error("A primary key field and ID is required to create a new item.");
       return { error: errors.MISSING_OPTION_EXCEPTION };
     }
 
