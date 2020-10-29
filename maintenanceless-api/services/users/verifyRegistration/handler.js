@@ -1,5 +1,5 @@
-import handler from "../../../libs/handlerLib";
-import DynamoDBRepository from "../../../libs/DynamoDBRepository";
+import handler from "../../../libs/aws/handlerLib";
+import DynamoDBRepository from "../../../libs/aws/DynamoDBRepository";
 import User from "../../../models/User";
 
 import AWS from "aws-sdk";

@@ -32,8 +32,8 @@ export function generatePasswordHash(password, hashRounds) {
  * Helper function to confirm that the code supplied by the user is valid.
  * Returns true if the verification code matches the database, false otherwise.
  *
- * @param {Number} enteredCode - the code entered by the user
- * @param {Number} correctCode - the code created when the user initially registered
+ * @param {String} enteredCode - the code entered by the user
+ * @param {String} correctCode - the code created when the user initially registered
  */
 export function isEnteredCodeValid(enteredCode, correctCode) {
   return correctCode === enteredCode;

@@ -1,6 +1,6 @@
-import { DYNAMO_DB_INSERT } from "../../../libs/constants";
-import SESAdapter from "../../../libs/SESAdapter";
-import EmailManager from "../../../libs/EmailManager";
+import { DYNAMO_DB_INSERT } from "../../../libs/constants/constants";
+import SESAdapter from "../../../libs/aws/SESAdapter";
+import EmailManager from "../../../libs/managers/EmailManager";
 
 var AWS = require("aws-sdk");
 AWS.config.update({ region: "us-east-2" });

@@ -8,7 +8,7 @@ export default function handler(lambda) {
       body = result.body;
       statusCode = result.statusCode || 200;
     } catch (e) {
-      body = { error: e.message };
+      body = { error: "There was a problem fulfilling your request." };
       statusCode = 500;
     }
 
