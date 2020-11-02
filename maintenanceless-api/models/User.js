@@ -6,13 +6,20 @@ class User {
   }
 
   async createUser(email, password) {
+    if (!email || !password) {
+      return {
+        error: "An email and a password are required to create a user."
+      };
+    }
+
     // Generate the hash of the password to be used for the user
     let hashedPassword;
     try {
       hashedPassword = await generatePasswordHash(password, 10);
     } catch (err) {
+      console.error(err);
       return {
-        error: "There was a problem creating the user"
+        error: "There was a problem creating the user."
       };
     }
 
@@ -34,7 +41,7 @@ class User {
     }
 
     return {
-      result: "User created succesfully."
+      result: "User created successfully."
     };
   }
 
