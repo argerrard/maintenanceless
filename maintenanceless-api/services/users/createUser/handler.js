@@ -56,7 +56,7 @@ export const main = handler(async (event, context) => {
     return {
       statusCode: 500,
       body: {
-        result: "There was a problem registering the account."
+        error: "There was a problem registering the account."
       }
     };
   }

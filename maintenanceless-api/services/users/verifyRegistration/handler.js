@@ -6,7 +6,6 @@ import AWS from "aws-sdk";
 
 const client = new AWS.DynamoDB.DocumentClient();
 const repository = new DynamoDBRepository("Users", client);
-const userModel = new User(repository);
 
 const invalidRequestResponse = {
   statusCode: 400,
@@ -31,7 +30,7 @@ const invalidRequestResponse = {
   }
 
   email = email.toLowerCase();
-
+  const userModel = new User(repository);
   const { error, result } = await userModel.verifyUserRegistration(email, confirmationCode);
   if (error) {
     return {
