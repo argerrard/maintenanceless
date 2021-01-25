@@ -83,3 +83,5 @@ functions:
           cors: true
   loginAuthorizer:
     handler: services/auth/authorizer/handler.main
+    environment:
+      JWT_SECRET: ${ssm:/jwt-auth-secret~true}
