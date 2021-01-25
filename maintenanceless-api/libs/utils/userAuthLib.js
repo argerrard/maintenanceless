@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import jwt from 'jsonwebtoken';
 
 /**
  * Generates a confirmation code that the user is required to enter when registering.
@@ -37,4 +38,25 @@ export function generatePasswordHash(password, hashRounds) {
  */
 export function isEnteredCodeValid(enteredCode, correctCode) {
   return correctCode === enteredCode;
+}
+
+/**
+ * Helper function to confirm if a user provided password is correct for logging in.
+ * Returns true if the password matches the provided hash, false otherwise.
+ *
+ * @param {String} password - the password provided by the user
+ * @param {String} passwordHash - the password hash stored in the repository
+ */
+export function isValidPassword(password, passwordHash) {
+  try {
+    return bcrypt.compareSync(password, passwordHash);
+  } catch(err) {
+    console.error(err);
+    return false;
+  }
+}
+
+export function generateJWT(jwtBody, jwtSecret, expiresIn = '6h') {
+  const token = jwt.sign(jwtBody, jwtSecret, { expiresIn });
+  return token;
 }

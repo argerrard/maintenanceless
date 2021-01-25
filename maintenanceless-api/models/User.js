@@ -138,6 +138,28 @@ class User {
       result: `Success! ${email} is activated and ready to start maintaining.`
     };
   }
+
+  /**
+   * Method to return the hashed password for the provided user.
+   * The return value is an object with an error attribute containing the error message on failure.
+   * On success, the return value is an object containing the hashed password with the password key.
+   *
+   * @param {String} email
+   */
+  async getHashedPassword(email) {
+    const options = { primaryKeyField: "email", attributesToGet: [ "password" ] };
+    const { result, error } = await this.repository.get(email, options);
+
+    if (error || !result.hasOwnProperty("password")) {
+      return {
+        error: 'There was a problem getting the password from the repository.'
+      };
+    }
+
+    return {
+      password: result.password
+    };
+  }
 }
 
 export default User;

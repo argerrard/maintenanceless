@@ -61,3 +61,27 @@ functions:
           path: users/verify
           method: post
           cors: true
+  login:
+    handler: services/auth/login/handler.main
+    environment:
+      JWT_SECRET: ${ssm:/jwt-auth-secret~true}
+    events:
+      - http:
+          path: auth/login
+          method: post
+          cors: true
+  createTask:
+    handler: services/tasks/create/handler.main
+    events:
+      - http:
+          path: tasks
+          method: post
+          authorizer:
+            name: loginAuthorizer
+            identitySource: method.request.header.Authorization
+            type: token
+          cors: true
+  loginAuthorizer:
+    handler: services/auth/authorizer/handler.main
+    environment:
+      JWT_SECRET: ${ssm:/jwt-auth-secret~true}

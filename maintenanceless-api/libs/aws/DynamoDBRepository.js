@@ -162,8 +162,9 @@ class DynamoDBRepository {
 
     try {
       const result = await this.db.get(params).promise();
-      console.info("Returning result", result.Item);
-      return { result: result.Item };
+      const returnedResult = result.Item ? result.Item : {};
+      console.info("Returning result", returnedResult);
+      return { result: returnedResult };
     } catch (err) {
       console.error(err);
       return { error: errors.ITEM_GET_EXCEPTION };
